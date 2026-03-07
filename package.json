@@ -1,18 +1,13 @@
 {
-  "name": "realtor-bot",
-  "version": "3.0.0",
-  "description": "Telegram bot for Realtors with AI (Updated)",
-  "main": "bot.js",
-  "scripts": {
-    "start": "node bot.js"
-  },
-  "dependencies": {
-    "telegraf": "^4.16.3",
-    "pdfkit": "^0.15.0",
-    "axios": "^1.7.2",
-    "@google/generative-ai": "^0.12.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+"name": "realtor-bot",
+"version": "3.0.0",
+"main": "bot.js",
+"scripts": { "start": "node bot.js" },
+"dependencies": {
+"telegraf": "^4.16.3",
+"pdfkit": "^0.15.0",
+"axios": "^1.7.2",
+"@google/generative-ai": "^0.12.0"
+},
+"engines": { "node": ">=18.0.0" }
 }
