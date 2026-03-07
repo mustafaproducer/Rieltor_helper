@@ -49,7 +49,8 @@ bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
 });
 
 async function generateScript(text) {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // FIX: Yangi kutubxona bilan ishlash (gemini-1.5-flash)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const prompt = `
     ROLE: You are an expert Real Estate Video Scriptwriter & Viral Hook Generator.
@@ -59,16 +60,11 @@ async function generateScript(text) {
     
     STRATEGY:
     1. Analyze the input data.
-    2. Choose the SINGLE BEST Hook Formula for this specific property from:
-       - Contrarian (Challenge belief)
-       - Number Claim (Specific stat)
-       - Problem-Agitation (Pain point)
-       - Curiosity Gap (Tease info)
-       - Direct Benefit (Value)
+    2. Choose the SINGLE BEST Hook Formula for this specific property.
     
     OUTPUT FORMAT (Use emojis, make it engaging):
     
-    🎣 **HOOK (Formula: [Formula Name])**
+    🎣 **HOOK**
     (0-3 sec)
     [Visual]: ...
     [Audio]: ...
@@ -112,7 +108,6 @@ bot.hears('✅ Tayyor (PDF yasash)', async (ctx) => {
         const writeStream = fs.createWriteStream(pdfPath);
         doc.pipe(writeStream);
 
-        // Muqova
         doc.fontSize(24).text('🏠 Haftalik Uylar Katalogi', { align: 'center' });
         doc.moveDown();
         doc.fontSize(14).text(`Rieltor: ${ctx.from.first_name}`, { align: 'center' });
@@ -151,9 +146,8 @@ bot.hears('❌ Bekor qilish', (ctx) => {
 bot.on(['text', 'photo'], async (ctx) => {
     const userId = ctx.from.id;
     const session = userSessions[userId];
-    if (!session) return; // Agar rejim tanlanmagan bo'lsa
+    if (!session) return; 
 
-    // Matnni olish
     const text = ctx.message.caption || ctx.message.text || '';
 
     // 1. AI REJIMI
@@ -164,12 +158,9 @@ bot.on(['text', 'photo'], async (ctx) => {
         try {
             const script = await generateScript(text);
             ctx.reply(script, { parse_mode: 'Markdown' });
-            // Sessiyani tugatish yoki davom ettirish (ixtiyoriy)
-            // delete userSessions[userId]; 
-            ctx.reply('Yana yozish uchun ma\'lumot yuboring yoki "Bekor qilish" ni bosing.');
         } catch (e) {
             console.error(e);
-            ctx.reply('❌ AI xatosi. Qaytadan urinib ko\'ring.');
+            ctx.reply(`❌ AI xatosi: ${e.message}`);
         }
     }
 
@@ -191,6 +182,5 @@ const http = require('http');
 http.createServer((req, res) => res.end('Bot is running')).listen(process.env.PORT || 10000);
 
 bot.launch();
-console.log('🤖 Realtor Bot Started');
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
