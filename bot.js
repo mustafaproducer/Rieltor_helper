@@ -7,7 +7,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- SOZLAMALAR ---
 const BOT_TOKEN = process.env.BOT_TOKEN || '8735420503:AAFghhgFx6pxmTwxxP3eENYu4J-MTOUzg04';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCUj9Sh5knyzcGgxaBd8KEeSc-qLKZqVRk';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Environmentdan oladi
 
 const bot = new Telegraf(BOT_TOKEN);
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -49,8 +49,8 @@ bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
 });
 
 async function generateScript(text) {
-    // FIX: Yangi kutubxona bilan ishlash (gemini-1.5-flash)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // FIX: gemini-pro (Eng barqaror)
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const prompt = `
     ROLE: You are an expert Real Estate Video Scriptwriter & Viral Hook Generator.
@@ -150,7 +150,6 @@ bot.on(['text', 'photo'], async (ctx) => {
 
     const text = ctx.message.caption || ctx.message.text || '';
 
-    // 1. AI REJIMI
     if (session.step === 'WAITING_FOR_AI_INPUT') {
         if (!text) return ctx.reply('⚠️ Iltimos, uy haqida ma\'lumot (matn) ham yozing.');
         
@@ -164,7 +163,6 @@ bot.on(['text', 'photo'], async (ctx) => {
         }
     }
 
-    // 2. PDF REJIMI
     else if (session.step === 'COLLECTING_PDF') {
         const item = { caption: text };
         if (ctx.message.photo) {
@@ -177,7 +175,7 @@ bot.on(['text', 'photo'], async (ctx) => {
     }
 });
 
-// --- RENDER PORT (Health Check) ---
+// --- RENDER PORT ---
 const http = require('http');
 http.createServer((req, res) => res.end('Bot is running')).listen(process.env.PORT || 10000);
 
