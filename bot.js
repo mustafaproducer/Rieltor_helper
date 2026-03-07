@@ -49,7 +49,8 @@ bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
 });
 
 async function generateScript(text) {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // FIX: Model nomi yangilandi (gemini-pro -> gemini-1.5-flash)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const prompt = `
     ROLE: You are an expert Real Estate Video Scriptwriter & Viral Hook Generator.
@@ -151,9 +152,8 @@ bot.hears('❌ Bekor qilish', (ctx) => {
 bot.on(['text', 'photo'], async (ctx) => {
     const userId = ctx.from.id;
     const session = userSessions[userId];
-    if (!session) return; // Agar rejim tanlanmagan bo'lsa
+    if (!session) return; 
 
-    // Matnni olish
     const text = ctx.message.caption || ctx.message.text || '';
 
     // 1. AI REJIMI
@@ -164,12 +164,9 @@ bot.on(['text', 'photo'], async (ctx) => {
         try {
             const script = await generateScript(text);
             ctx.reply(script, { parse_mode: 'Markdown' });
-            // Sessiyani tugatish yoki davom ettirish (ixtiyoriy)
-            // delete userSessions[userId]; 
-            ctx.reply('Yana yozish uchun ma\'lumot yuboring yoki "Bekor qilish" ni bosing.');
         } catch (e) {
             console.error(e);
-            ctx.reply('❌ AI xatosi. Qaytadan urinib ko\'ring.');
+            ctx.reply(`❌ AI xatosi: ${e.message}. Qaytadan urinib ko'ring.`);
         }
     }
 
@@ -191,6 +188,5 @@ const http = require('http');
 http.createServer((req, res) => res.end('Bot is running')).listen(process.env.PORT || 10000);
 
 bot.launch();
-console.log('🤖 Realtor Bot Started');
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
