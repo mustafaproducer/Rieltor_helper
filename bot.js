@@ -7,7 +7,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- SOZLAMALAR ---
 const BOT_TOKEN = process.env.BOT_TOKEN || '8735420503:AAFghhgFx6pxmTwxxP3eENYu4J-MTOUzg04';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Environmentdan oladi
+// YANGI API KEY (Hardcoded)
+const GEMINI_API_KEY = 'AIzaSyDV5XssWVFbwMwsxp7OE-d9Rqpeb8fbDBE';
 
 const bot = new Telegraf(BOT_TOKEN);
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -49,8 +50,8 @@ bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
 });
 
 async function generateScript(text) {
-    // FIX: gemini-pro (Eng barqaror)
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // FIX: Yangi kalit bilan Flash model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const prompt = `
     ROLE: You are an expert Real Estate Video Scriptwriter & Viral Hook Generator.
