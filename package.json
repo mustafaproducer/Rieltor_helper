@@ -1,0 +1,15 @@
+{
+  "name": "realtor-bot",
+  "version": "2.0.0",
+  "description": "Telegram bot for Realtors with AI Script Generation",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.15.3",
+    "pdfkit": "^0.14.0",
+    "axios": "^1.6.7",
+    "@google/generative-ai": "^0.1.3"
+  }
+}
