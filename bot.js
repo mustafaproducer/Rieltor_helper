@@ -26,7 +26,7 @@ const cancelMenu = Markup.keyboard([['❌ Bekor qilish']]).resize();
 bot.start((ctx) => {
     ctx.reply(
         `👋 Assalomu alaykum, ${ctx.from.first_name}!\n\n` +
-        `🏠 **Rieltor AI (Groq/Llama 3)**ga xush kelibsiz.\n\n` +
+        `🏠 **Rieltor AI (Llama 3.3)**ga xush kelibsiz.\n\n` +
         `Men sizga:\n` +
         `• 🎬 Uylar uchun **Viral Reels Ssenariylar** yozib beraman (AI).\n` +
         `• 📄 Uylardan chiroyli **PDF Katalog** yasayman.\n\n` +
@@ -39,7 +39,7 @@ bot.start((ctx) => {
 bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
     userSessions[ctx.from.id] = { step: 'WAITING_FOR_AI' };
     ctx.reply(
-        `🤖 **AI Ssenariy Generator (Llama 3)**\n\n` +
+        `🤖 **AI Ssenariy Generator (Llama 3.3)**\n\n` +
         `Menga uy haqidagi ma'lumotni yuboring (Text yoki Rasm+Caption).\n` +
         `Men sizga **30-45 sekundlik Viral Reels Ssenariysi** yozib beraman.`,
         cancelMenu
@@ -67,8 +67,8 @@ async function generateScriptGroq(text) {
                 content: text
             }
         ],
-        // FIX: Model nomi yangilandi (llama3-70b-8192)
-        model: "llama3-70b-8192", 
+        // FIX: Eng yangi Llama 3.3 modeli
+        model: "llama-3.3-70b-versatile", 
         temperature: 0.7,
         max_tokens: 1024,
     });
@@ -137,7 +137,7 @@ bot.on(['text', 'photo'], async (ctx) => {
     // AI GROQ
     if (session.step === 'WAITING_FOR_AI') {
         if (!text) return ctx.reply('⚠️ Matn yozing!');
-        ctx.reply('⏳ **Yozmoqda (Groq Llama 3)...**');
+        ctx.reply('⏳ **Yozmoqda (Groq Llama 3.3)...**');
         try {
             const script = await generateScriptGroq(text);
             ctx.reply(script, { parse_mode: 'Markdown' });
