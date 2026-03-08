@@ -6,7 +6,7 @@ const PDFDocument = require('pdfkit');
 
 // --- SOZLAMALAR ---
 const BOT_TOKEN = process.env.BOT_TOKEN || '8735420503:AAFghhgFx6pxmTwxxP3eENYu4J-MTOUzg04';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCUj9Sh5knyzcGgxaBd8KEeSc-qLKZqVRk';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Environmentdan oladi
 
 const bot = new Telegraf(BOT_TOKEN);
 const userSessions = {};
@@ -73,18 +73,24 @@ async function generateScript(text) {
     `;
 
     try {
+        // FIX: gemini-pro modeli ishlatiladi
         const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
             {
                 contents: [{ parts: [{ text: prompt }] }]
             },
             { headers: { 'Content-Type': 'application/json' } }
         );
 
-        return response.data.candidates[0].content.parts[0].text;
+        if (response.data.candidates && response.data.candidates.length > 0) {
+             return response.data.candidates[0].content.parts[0].text;
+        } else {
+             return "❌ AI javob bermadi (Bo'sh javob).";
+        }
+
     } catch (error) {
         console.error("Gemini Error:", error.response ? error.response.data : error.message);
-        return "❌ AI Xatosi: Gemini API javob bermadi.";
+        return `❌ AI Xatosi: ${error.message}`;
     }
 }
 
