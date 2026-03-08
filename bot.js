@@ -60,14 +60,14 @@ async function generateScriptGroq(text) {
                 3. 💰 PRICE & VALUE: Why it's a good deal.
                 4. 📞 CTA: Call to action.
                 
-                Format: Use emojis. Be energetic. Output ONLY the script.`
+                Format: Use emojis. Be energetic. Output ONLY the script. NO MARKDOWN (no * or _ symbols).`
             },
             {
                 role: "user",
                 content: text
             }
         ],
-        // FIX: Eng yangi Llama 3.3 modeli
+        // Model: Llama 3.3 (Eng yangi va barqaror)
         model: "llama-3.3-70b-versatile", 
         temperature: 0.7,
         max_tokens: 1024,
@@ -140,7 +140,8 @@ bot.on(['text', 'photo'], async (ctx) => {
         ctx.reply('⏳ **Yozmoqda (Groq Llama 3.3)...**');
         try {
             const script = await generateScriptGroq(text);
-            ctx.reply(script, { parse_mode: 'Markdown' });
+            // FIX: Markdown olib tashlandi. Oddiy matn yuboramiz.
+            ctx.reply(script); 
         } catch (e) {
             console.error(e);
             ctx.reply(`❌ Xato: ${e.message}`);
