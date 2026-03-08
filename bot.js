@@ -3,14 +3,12 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
-const Groq = require('groq-sdk');
 
 // --- SOZLAMALAR ---
 const BOT_TOKEN = process.env.BOT_TOKEN || '8735420503:AAFghhgFx6pxmTwxxP3eENYu4J-MTOUzg04';
-const GROQ_API_KEY = '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';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCUj9Sh5knyzcGgxaBd8KEeSc-qLKZqVRk';
 
 const bot = new Telegraf(BOT_TOKEN);
-const groq = new Groq({ apiKey: GROQ_API_KEY });
 const userSessions = {};
 
 // --- MENYU ---
@@ -19,14 +17,14 @@ const mainMenu = Markup.keyboard([
     ['💧 Watermark & Edit', '📊 Analitika']
 ]).resize();
 
-const pdfMenu = Markup.keyboard([['✅ Tayyor (PDF yasash)', '❌ Bekor qilish']]).resize();
 const cancelMenu = Markup.keyboard([['❌ Bekor qilish']]).resize();
+const pdfMenu = Markup.keyboard([['✅ Tayyor (PDF yasash)', '❌ Bekor qilish']]).resize();
 
 // --- START ---
 bot.start((ctx) => {
     ctx.reply(
         `👋 Assalomu alaykum, ${ctx.from.first_name}!\n\n` +
-        `🏠 **Rieltor AI (Llama 3.3)**ga xush kelibsiz.\n\n` +
+        `🏠 **Rieltor AI (Gemini Pro)**ga xush kelibsiz.\n\n` +
         `Men sizga:\n` +
         `• 🎬 Uylar uchun **Viral Reels Ssenariylar** yozib beraman (AI).\n` +
         `• 📄 Uylardan chiroyli **PDF Katalog** yasayman.\n\n` +
@@ -35,44 +33,59 @@ bot.start((ctx) => {
     );
 });
 
-// --- 1. AI REELS SSENARIY (GROQ) ---
+// --- 1. REELS SSENARIY (AI - REST API) ---
 bot.hears('🎬 Reels Ssenariy (AI)', (ctx) => {
-    userSessions[ctx.from.id] = { step: 'WAITING_FOR_AI' };
+    userSessions[ctx.from.id] = { step: 'WAITING_FOR_AI_INPUT' };
     ctx.reply(
-        `🤖 **AI Ssenariy Generator (Llama 3.3)**\n\n` +
+        `🤖 **AI Ssenariy Generator (Gemini)**\n\n` +
         `Menga uy haqidagi ma'lumotni yuboring (Text yoki Rasm+Caption).\n` +
         `Men sizga **30-45 sekundlik Viral Reels Ssenariysi** yozib beraman.`,
         cancelMenu
     );
 });
 
-async function generateScriptGroq(text) {
-    const chatCompletion = await groq.chat.completions.create({
-        messages: [
+async function generateScript(text) {
+    const prompt = `
+    ROLE: Professional Real Estate Video Scriptwriter & Viral Content Creator.
+    TASK: Write a 30-45s Instagram Reels script in engaging UZBEK language based on the input below.
+    
+    INPUT: "${text}"
+    
+    OUTPUT FORMAT:
+    
+    🔥 **HOOK (0-3s)**
+    [Visual]: (Describe camera shot)
+    [Audio]: (Catchy opening phrase)
+    
+    🏠 **TOUR & FEATURES (3-20s)**
+    [Visual]: (Show rooms/yard)
+    [Audio]: (Describe benefits enthusiastically)
+    
+    💰 **VALUE & PRICE (20-35s)**
+    [Visual]: (Show text overlay)
+    [Audio]: (Mention price and why it's worth it)
+    
+    📞 **CALL TO ACTION (35-45s)**
+    [Visual]: (Show contact info)
+    [Audio]: (Tell them to call now)
+    
+    TONE: Energetic, Professional, Persuasive. USE EMOJIS!
+    `;
+
+    try {
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
             {
-                role: "system",
-                content: `You are an expert Real Estate Video Scriptwriter. 
-                Task: Write a Viral Instagram Reels script (30-45s) in UZBEK language based on the property details.
-                
-                Structure:
-                1. 🔥 HOOK (0-3s): Catchy opening.
-                2. 🏠 TOUR/FEATURES: Highlight key rooms/benefits.
-                3. 💰 PRICE & VALUE: Why it's a good deal.
-                4. 📞 CTA: Call to action.
-                
-                Format: Use emojis. Be energetic. Output ONLY the script. NO MARKDOWN (no * or _ symbols).`
+                contents: [{ parts: [{ text: prompt }] }]
             },
-            {
-                role: "user",
-                content: text
-            }
-        ],
-        // Model: Llama 3.3 (Eng yangi va barqaror)
-        model: "llama-3.3-70b-versatile", 
-        temperature: 0.7,
-        max_tokens: 1024,
-    });
-    return chatCompletion.choices[0]?.message?.content || "Xatolik yuz berdi.";
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        return response.data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        console.error("Gemini Error:", error.response ? error.response.data : error.message);
+        return "❌ AI Xatosi: Gemini API javob bermadi.";
+    }
 }
 
 // --- 2. PDF KATALOG ---
@@ -84,6 +97,7 @@ bot.hears('📄 PDF Katalog', (ctx) => {
 bot.hears('✅ Tayyor (PDF yasash)', async (ctx) => {
     const session = userSessions[ctx.from.id];
     if (!session || session.items.length === 0) return ctx.reply('⚠️ Hali hech narsa yubormadingiz.', pdfMenu);
+    
     ctx.reply('⏳ PDF tayyorlanmoqda...');
     
     try {
@@ -134,20 +148,21 @@ bot.on(['text', 'photo'], async (ctx) => {
 
     const text = ctx.message.caption || ctx.message.text || '';
 
-    // AI GROQ
-    if (session.step === 'WAITING_FOR_AI') {
-        if (!text) return ctx.reply('⚠️ Matn yozing!');
-        ctx.reply('⏳ **Yozmoqda (Groq Llama 3.3)...**');
+    // 1. AI REJIMI
+    if (session.step === 'WAITING_FOR_AI_INPUT') {
+        if (!text) return ctx.reply('⚠️ Iltimos, uy haqida ma\'lumot (matn) ham yozing.');
+        
+        ctx.reply('⏳ **AI Ssenariy yozmoqda (Gemini)...**');
         try {
-            const script = await generateScriptGroq(text);
-            // FIX: Markdown olib tashlandi. Oddiy matn yuboramiz.
-            ctx.reply(script); 
+            const script = await generateScript(text);
+            ctx.reply(script); // Markdown siz yuboriladi
         } catch (e) {
             console.error(e);
             ctx.reply(`❌ Xato: ${e.message}`);
         }
     }
-    // PDF
+
+    // 2. PDF REJIMI
     else if (session.step === 'COLLECTING_PDF') {
         const item = { caption: text };
         if (ctx.message.photo) {
